@@ -2,96 +2,119 @@
 #include <stdlib.h>
 #include <math.h>
 
-void alocaincognita(int grau, float **incognita);
-float calculofuncao(float *incognita, int grau, float intervalo);
-void alocasoma(int grau, float **soma);
-int verificafuncao(float a, float b, float *incognita, int grau); //vai verificar se existe zero de função no intervalo indicado.
+// Estrutura para representar o polinomio e seus coeficientes
+typedef struct
+{
+    int grau;
+    float *coef;
+} Polinomio;
 
-int main(){
-    int g; //Variável referente ao grau da função.
-    int i; // Variável para loop
-    float *incognita = NULL;  //Variável para armazenar as incógnitas de cada grau da função.
-    float a,b; //Intervalos da função;
+void alocaPolinomio(Polinomio *p, int grau);
+float calculofuncao(Polinomio *p, float x);
+int verificafuncao(Polinomio *p, float a, float b); // vai verificar se existe zero de funÃ§Ã£o no intervalo indicado.
 
+int main()
+{
+    Polinomio P; // Instancia da struct
+    int i;       // VariÃ¡vel para loop
+    float a, b;  // Intervalos da funÃ§Ã£o;
 
-    printf("Digite o grau da função: ");
-    scanf("%i", &g);
-
+    printf("Digite o grau da funssaum: ");
+    scanf("%i", &P.grau);
 
     printf("\n");
-    alocaincognita(g, &incognita);
+    // Aloca memoria para os coeficientes na struct
+    alocaPolinomio(&P, P.grau);
 
-    for(i=g;i>=0;i--){
+    for (i = P.grau; i >= 0; i--)
+    {
         printf("Digite o (x^%i) valor : ", i);
         printf("\n");
-        scanf("%f", (incognita+i));
+        scanf("%f", &P.coef[i]);
     }
 
     printf("\n");
 
-    printf("Digite o intervalo a");
+    printf("Digite o intervalo a: ");
     scanf("%f", &a);
 
     printf("\n");
 
-    printf("Digite o intervalo b");
+    printf("Digite o intervalo b: ");
     scanf("%f", &b);
 
-    printf("\n\nVerificando se há zeros de função no intervalo citado");
+    printf("\n\nVerificando se ha zeros de funssaum no intervalo citado");
 
+    int qtd = verificafuncao(&P, a, b);
 
-    if(verificafuncao(a, b, incognita, g) == 0){
-        printf("Existe zero de função nos intervalos indicados.");
-        system("pause");
-    }else{
-        printf("Não há zero da função nos intervalos indicados.");
+    if (qtd > 0)
+    {
+        printf("\nExiste(m) %d zero(s) da funcao no intervalo.", qtd);
     }
-}
-
-void alocaincognita(int grau, float **incognita){
-    *incognita = (float*) realloc(*incognita, grau*sizeof(float));
-
-    if(*incognita == NULL){
-        printf("ERRO NO CÓDIGO (ALOCAR INCOGNITA)");
-        system("pause");
-        exit(1);
-    }
-}
-
-void alocasoma(int grau, float **soma){
-    *soma = (float*) realloc(*soma, grau*sizeof(float));
-
-    if(*soma == NULL){
-        printf("ERRO NO CÓDIGO (ALOCAR INCOGNITA)");
-        system("pause");
-        exit(1);
-    }
-}
-
-float calculofuncao(float *incognita, int grau, float intervalo){
-    int i;
-    float *soma; //Somar cada grau da função
-    float total=0;
-
-    alocasoma(grau ,&soma);
-
-    for(i=0;i<grau;i++){
-        *(soma+i) = (intervalo+i)*pow(intervalo,i);//Vai realizar o cálculo do valor junto a incógnita e armazená-lo ao vetor soma em sua respectiva posição.
-    }
-
-    for(i=grau;i>=0; i++){
-        total += *(soma+i);//Vai somar cada grau da função.
-    }
-
-    return total;
-}
-
-int verificafuncao(float a, float b, float *incognita, int grau){
-    int verifica;
-
-    if((calculofuncao(incognita,grau, a))*(calculofuncao(incognita,grau,b)) < 0)
-        verifica=0;
     else
-        verifica = -1;
+    {
+        printf("\nNao ha zero da funcao no intervalo.");
+    }
+
+    // Boa pratica: liberar memoria e pausar no final
+    free(P.coef);
+    system("pause");
 }
 
+void alocaPolinomio(Polinomio *p, int grau)
+{
+    p->coef = NULL;
+    // Para grau N, precisamos de N+1 coeficientes (0 a N)
+    p->coef = realloc(p->coef, (grau + 1) * sizeof(float));
+
+    if (p->coef == NULL)
+    {
+        printf("ERRO NO CODIGO (ALOCAR MEMORIA)");
+        system("pause");
+        exit(1);
+    }
+}
+
+float calculofuncao(Polinomio *p, float x)
+{
+    int i;
+    float resultado = 0;
+
+    // Realiza o somatÃ³rio: c0*x^0 + c1*x^1 + ...
+    for (i = 0; i <= p->grau; i++)
+    {
+        resultado += p->coef[i] * pow(x, i);
+    }
+
+    return resultado;
+}
+
+int verificafuncao(Polinomio *p, float a, float b)
+{
+    float passo = 0.1;
+    float x;
+    int contador = 0;
+
+    for (x = a; x < b; x += passo)
+    {
+        float proximo = x + passo;
+        if (proximo > b)
+            proximo = b;
+
+        float fx1 = calculofuncao(p, x);
+        float fx2 = calculofuncao(p, proximo);
+
+        if (fabs(fx1) < 0.0001)
+        {
+            printf("\nRaiz aproximada em x = %.2f\n", x);
+            contador++;
+        }
+        else if (fx1 * fx2 < 0)
+        {
+            printf("\nRaiz entre %.2f e %.2f\n", x, proximo);
+            contador++;
+        }
+    }
+
+    return contador;
+}
